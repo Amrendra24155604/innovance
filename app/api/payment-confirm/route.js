@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { dbConnect } from "../../../dbConfig/dbConfig.js";
 import User from "../../../models/users.models.js";
 import { uploadScreenshot } from "../../../lib/cloudinary.js";
-
 export async function POST(req) {
   try {
     await dbConnect();

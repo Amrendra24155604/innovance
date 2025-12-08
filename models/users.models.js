@@ -65,12 +65,14 @@ const userSchema = new mongoose.Schema(
     paymentScreenshot: {
       type: String, 
     },
-  otp: { type: String },
+    otp: { type: String },
     otpExpiry: { type: Date },
+    approvedBy: { type: String },
+    approvedAt: { type: Date },
   },
   { timestamps: true }
 );
-
+//unique id 
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 export default User;

@@ -8,6 +8,25 @@ export default function PaymentPage() {
   const [upiId, setUpiId] = useState("");
   const [screenshot, setScreenshot] = useState(null);
   const [rollNumber, setRollNumber] = useState("");
+  const [qrImage, setQrImage] = useState(null);
+  const [troubleshootMode, setTroubleshootMode] = useState(false);
+  const [troubleshootImage, setTroubleshootImage] = useState(null);
+
+  // Normal QR images
+  const qrImages = [
+    "/qrs/first.png",
+    "/qrs/second.png",
+    "/qrs/third.png",
+    "/qrs/fourth.png",
+    "/qrs/fifth.png",
+  ];
+
+  // Troubleshoot QR images
+  const troubleshootImages = [
+    "/troubleshoot/tone.png",
+    "/troubleshoot/ttwo.png",
+    "/troubleshoot/tthree.png",
+  ];
 
   useEffect(() => {
     const user = JSON.parse(localStorage.getItem("user"));
@@ -17,13 +36,44 @@ export default function PaymentPage() {
     } else {
       setRollNumber(user.rollNumber);
     }
+
+    // --- Cyclic QR selection for normal mode ---
+    let index = parseInt(localStorage.getItem("qrIndex") || "0", 10);
+    setQrImage(qrImages[index]);
+
+    const nextIndex = (index + 1) % qrImages.length;
+    localStorage.setItem("qrIndex", nextIndex.toString());
+
+    // --- Initialize troubleshoot QR ---
+    let tIndex = parseInt(localStorage.getItem("troubleshootIndex") || "0", 10);
+    setTroubleshootImage(troubleshootImages[tIndex]);
+    localStorage.setItem(
+      "troubleshootIndex",
+      ((tIndex + 1) % troubleshootImages.length).toString()
+    );
   }, [router]);
+
+  // Cycle troubleshoot QR on each click
+  const handleTroubleshootClick = () => {
+    setTroubleshootMode(true);
+    let tIndex = parseInt(localStorage.getItem("troubleshootIndex") || "0", 10);
+    setTroubleshootImage(troubleshootImages[tIndex]);
+    const nextTIndex = (tIndex + 1) % troubleshootImages.length;
+    localStorage.setItem("troubleshootIndex", nextTIndex.toString());
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // ✅ Custom validation: require at least one of UPI ID or Screenshot
+    if (!upiId && !screenshot) {
+      alert("Please enter UPI ID or upload a screenshot.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("rollNumber", rollNumber);
-    formData.append("upiId", upiId);
+    if (upiId) formData.append("upiId", upiId);
     if (screenshot) formData.append("screenshot", screenshot);
 
     const res = await fetch("/api/payment-confirm", {
@@ -36,7 +86,7 @@ export default function PaymentPage() {
       alert(
         "Thank you for joining! Please wait while we confirm your payment and create your ticket."
       );
-      router.push("/"); // redirect to home
+      router.push("/");
     } else {
       alert(data.error);
     }
@@ -53,29 +103,38 @@ export default function PaymentPage() {
           Please pay <strong>₹199</strong> using the QR code below and upload your details.
         </p>
 
-        {/* Cloudinary QR Image */}
+        {/* QR Image */}
         <div className="space-y-4">
-          <div>
-            <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
-              UPI QR
-            </h3>
+          <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            {troubleshootMode ? "Troubleshoot QR" : "UPI QR"}
+          </h3>
+          {(troubleshootMode ? troubleshootImage : qrImage) && (
             <img
-              src="https://res.cloudinary.com/<cloud_name>/image/upload/v1234567890/upi_qr.png"
+              src={troubleshootMode ? troubleshootImage : qrImage}
               alt="UPI QR"
-              className="mx-auto w-64 h-64 object-contain border rounded-lg shadow"
+              className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md object-contain border-4 border-blue-500 rounded-xl shadow-lg transition-transform transform hover:scale-105"
             />
-          </div>
+          )}
+        </div>
+
+        {/* Troubleshoot Button */}
+        <div className="mt-4">
+          <button
+            onClick={handleTroubleshootClick}
+            className="w-full bg-red-600 text-white font-semibold p-3 rounded-lg shadow hover:bg-red-700 transition-transform transform hover:scale-105"
+          >
+            Show Troubleshoot QR
+          </button>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5 mt-6 text-left">
           <input
             type="text"
-            placeholder="Enter your UPI ID"
+            placeholder="Enter your UPI ID (optional)"
             value={upiId}
             onChange={(e) => setUpiId(e.target.value)}
             className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
-            required
           />
 
           <input
