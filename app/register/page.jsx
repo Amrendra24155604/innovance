@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -22,28 +23,29 @@ export default function RegistrationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate email
+    const expectedEmail = `${formData.rollNumber}@kiit.ac.in`;
+    if (formData.email !== expectedEmail) {
+      alert("Email must be your roll number followed by @kiit.ac.in (e.g., 12345678@kiit.ac.in)");
+      return;
+    }
+
     const payload = {
       ...formData,
-      kiitEmail: `${formData.rollNumber}@kiit.ac.in`,
     };
 
     try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
 
-      let data = null;
-      try {
-        data = await res.json();
-      } catch {}
+      const response = await axios.post('/api/register', payload);
 
-      if (res.ok) {
+      const data = response.data;
+
+      if (response.status === 200) {
         const roll = data?.rollNumber || formData.rollNumber;
         router.push(`/verify-otp?roll=${encodeURIComponent(roll)}`);
       } else {
-        alert((data && data.error) || `Request failed with status ${res.status}`);
+        alert((data && data.error) || `Request failed with status ${response.status}`);
       }
     } catch (err) {
       console.error(err);
