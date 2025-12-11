@@ -2,12 +2,7 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
   {
-    firstName: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    lastName: {
+    fullName: {
       type: String,
       required: true,
       trim: true,
@@ -16,7 +11,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
       unique: true,
-    //   match: [/^[^\s@]+@[^\s@]+\.[^\s@]+$/, "Please enter a valid email"],
     },
     phoneNumber: {
       type: String,
@@ -43,12 +37,12 @@ const userSchema = new mongoose.Schema(
         "Civil",
         "Biotechnology",
         "Other",
-      ], 
+      ],
     },
     year: {
       type: Number,
       required: true,
-      enum: [1, 2, 3, 4], 
+      enum: [1, 2, 3, 4],
     },
     isPaymentSuccessful: {
       type: Boolean,
@@ -63,16 +57,17 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     paymentScreenshot: {
-      type: String, 
+      type: String,
     },
     otp: { type: String },
     otpExpiry: { type: Date },
     approvedBy: { type: String },
     approvedAt: { type: Date },
+    sessionId: { type: String, unique: true },
+    sessionExpiry: { type: Date },
   },
   { timestamps: true }
 );
-//unique id 
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
 export default User;

@@ -22,8 +22,13 @@ export default function RegistrationPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Merge firstName + lastName into fullName (last name first)
+    const fullName = `${formData.lastName} ${formData.firstName}`;
+
     const payload = {
       ...formData,
+      fullName, // send fullName instead of separate fields
       kiitEmail: `${formData.rollNumber}@kiit.ac.in`,
     };
 
@@ -101,7 +106,7 @@ export default function RegistrationPage() {
           <input
             type="email"
             name="email"
-            placeholder="Kiit Email"
+            placeholder="KIIT Email"
             value={formData.email}
             onChange={handleChange}
             required
@@ -171,6 +176,16 @@ export default function RegistrationPage() {
             Register
           </button>
         </form>
+
+        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
+          Already registered?{" "}
+          <button
+            onClick={() => router.push("/login")}
+            className="text-blue-600 hover:underline"
+          >
+            Login instead
+          </button>
+        </p>
       </div>
     </div>
   );
