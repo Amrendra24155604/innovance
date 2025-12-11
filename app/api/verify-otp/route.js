@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbConnect } from "../../../dbConfig/dbConfig.js";
 import User from "../../../models/users.models.js";
+import { signUserToken } from "../../../lib/userAuth.js";
 
 export async function POST(req) {
   try {
@@ -42,21 +43,47 @@ export async function POST(req) {
 
     await user.save();
 
-     return NextResponse.json(
-    {
-      message: "OTP verified successfully",
-      user: {
-        rollNumber: user.rollNumber,
-        firstName: user.firstName,
-        lastName: user.lastName,
-        kiitEmail: user.kiitEmail,
-        branch: user.branch,
-        year: user.year,
-      },
-    },
-    { status: 200 }
-  );
+    let token;
+    try {
+      token = signUserToken({ rollNumber: user.rollNumber });
+    } catch (err) {
+      console.error("Failed to sign token in /api/verify-otp:", err);
+      return NextResponse.json(
+        { error: "Server configuration error: JWT secret missing or invalid" },
+        { status: 500 }
+      );
+    }
 
+    const response = NextResponse.json(
+      {
+        message: "OTP verified successfully",
+        user: {
+          rollNumber: user.rollNumber,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          kiitEmail: user.kiitEmail,
+          branch: user.branch,
+          year: user.year,
+        },
+      },
+      { status: 200 }
+    );
+
+    // Log for debugging (remove or lower log level in production)
+    console.log(
+      "/api/verify-otp: setting userToken cookie for",
+      user.rollNumber
+    );
+
+    // Explicit cookie attributes to improve browser acceptance on localhost
+    response.cookies.set("userToken", token, {
+      httpOnly: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    });
+
+    return response;
   } catch (error) {
     console.error("Error in /api/verify-otp:", error);
     return NextResponse.json(

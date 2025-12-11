@@ -24,7 +24,7 @@ export async function POST(req) {
     await user.save();
 
     // Send email
-    await sendOtpEmail(user.kiitEmail, otp);
+    await sendOtpEmail(user.email, otp);
 
     return NextResponse.json({ message: "New OTP sent to your email" }, { status: 200 });
   } catch (error) {

@@ -20,6 +20,7 @@ export default function VerifyOtpPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rollNumber, otp }),
+      credentials: "include",
     });
     const data = await res.json();
     if (res.ok) {
@@ -36,6 +37,7 @@ export default function VerifyOtpPage() {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rollNumber }),
+      credentials: "include",
     });
     const data = await res.json();
     if (res.ok) {
@@ -70,7 +72,7 @@ export default function VerifyOtpPage() {
 
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold p-3 rounded-lg shadow hover:from-green-700 hover:to-teal-700 transition-transform transform hover:scale-105"
+            className="w-full bg-gradient-l-to-r from-green-600 to-teal-600 text-white font-semibold p-3 rounded-lg shadow hover:from-green-700 hover:to-teal-700 transition-transform transform hover:scale-105"
           >
             Verify
           </button>
@@ -78,7 +80,7 @@ export default function VerifyOtpPage() {
           <button
             type="button"
             onClick={handleResend}
-            className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold p-3 rounded-lg shadow hover:from-blue-700 hover:to-indigo-700 transition-transform transform hover:scale-105"
+            className="w-full bg-gradient-l -to-r from-blue-600 to-indigo-600 text-white font-semibold p-3 rounded-lg shadow hover:from-blue-700 hover:to-indigo-700 transition-transform transform hover:scale-105"
           >
             Resend OTP
           </button>

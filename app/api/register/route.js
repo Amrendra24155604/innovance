@@ -71,7 +71,7 @@ export async function POST(req) {
         );
       }
       throw err;
-    }
+    } 
 
     // Send OTP email (to kiitEmail)
     try {

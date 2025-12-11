@@ -40,6 +40,21 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const handleAdminLogout = async () => {
+    try {
+      const res = await fetch("/api/admin/logout", { method: "POST", credentials: "include" });
+      if (res.ok) {
+        router.push("/admin/login");
+      } else {
+        const data = await res.json().catch(() => null);
+        alert(data?.error || "Logout failed");
+      }
+    } catch (err) {
+      console.error("Admin logout error:", err);
+      alert("Logout failed");
+    }
+  };
+
   const approve = async (roll) => {
     console.log("approve() called for:", roll);
     if (!roll) {
@@ -103,7 +118,10 @@ export default function AdminDashboard() {
 
   return (
     <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Admin Dashboard</h1>
+      <div className="flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold">Admin Dashboard</h1>
+        <button onClick={handleAdminLogout} className="px-3 py-1 bg-red-600 text-white rounded">Logout</button>
+      </div>
 
       <table className="w-full table-auto border-collapse">
         <thead>

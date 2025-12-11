@@ -3,6 +3,7 @@
 import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Link from "next/link";
 
 export default function RegistrationPage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function RegistrationPage() {
 
     const payload = {
       ...formData,
+      kiitEmail: expectedEmail,     
     };
 
     try {
@@ -165,10 +167,14 @@ export default function RegistrationPage() {
             className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
 
+          <Link href="/login" className="text-sm text-gray-600">
+            Already have an account? Login
+          </Link>
+
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold p-3 rounded-lg shadow hover:from-blue-700 hover:to-purple-700 transition-transform transform hover:scale-105"
+            className="w-full bg-gradient-l-to-r from-blue-600 to-purple-600 text-white font-semibold p-3 rounded-lg shadow hover:from-blue-700 hover:to-purple-700 transition-transform transform hover:scale-105"
           >
             Register
           </button>
