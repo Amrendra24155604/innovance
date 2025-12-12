@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@google/genai": "^1.33.0",
+    "axios": "^1.13.2",
     "cloudinary": "^2.8.0",
     "dotenv": "^17.2.3",
     "jsonwebtoken": "^9.0.3",

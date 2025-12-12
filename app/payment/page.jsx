@@ -12,7 +12,6 @@ export default function PaymentPage() {
   const [troubleshootMode, setTroubleshootMode] = useState(false);
   const [troubleshootImage, setTroubleshootImage] = useState(null);
 
-  // Normal QR images
   const qrImages = [
     "/qrs/first.png",
     "/qrs/second.png",
@@ -21,7 +20,6 @@ export default function PaymentPage() {
     "/qrs/fifth.png",
   ];
 
-  // Troubleshoot QR images
   const troubleshootImages = [
     "/troubleshoot/tone.png",
     "/troubleshoot/ttwo.png",
@@ -29,22 +27,24 @@ export default function PaymentPage() {
   ];
 
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem("user"));
+    const stored = localStorage.getItem("user");
+    const user = stored ? JSON.parse(stored) : null;
+
     if (!user) {
       alert("Please complete registration first.");
       router.push("/register");
-    } else {
-      setRollNumber(user.rollNumber);
+      return;
     }
 
-    // --- Cyclic QR selection for normal mode ---
+    setRollNumber(user.rollNumber || "");
+
+    // normal QR
     let index = parseInt(localStorage.getItem("qrIndex") || "0", 10);
     setQrImage(qrImages[index]);
-
     const nextIndex = (index + 1) % qrImages.length;
     localStorage.setItem("qrIndex", nextIndex.toString());
 
-    // --- Initialize troubleshoot QR ---
+    // troubleshoot QR
     let tIndex = parseInt(localStorage.getItem("troubleshootIndex") || "0", 10);
     setTroubleshootImage(troubleshootImages[tIndex]);
     localStorage.setItem(
@@ -53,7 +53,6 @@ export default function PaymentPage() {
     );
   }, [router]);
 
-  // Cycle troubleshoot QR on each click
   const handleTroubleshootClick = () => {
     setTroubleshootMode(true);
     let tIndex = parseInt(localStorage.getItem("troubleshootIndex") || "0", 10);
@@ -65,14 +64,25 @@ export default function PaymentPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // ✅ Custom validation: require at least one of UPI ID or Screenshot
+    const stored = localStorage.getItem("user");
+    const user = stored ? JSON.parse(stored) : null;
+    const email = user?.kiitEmail;
+    const userId = user?._id; // IMPORTANT: make sure you stored this at login/register
+
+    if (!email && !userId) {
+      alert("User data missing. Please login again.");
+      router.push("/login");
+      return;
+    }
+
     if (!upiId && !screenshot) {
       alert("Please enter UPI ID or upload a screenshot.");
       return;
     }
 
     const formData = new FormData();
-    formData.append("rollNumber", rollNumber);
+    formData.append("email", email);
+    formData.append("userId", userId);
     if (upiId) formData.append("upiId", upiId);
     if (screenshot) formData.append("screenshot", screenshot);
 
@@ -82,53 +92,61 @@ export default function PaymentPage() {
     });
 
     const data = await res.json();
+
     if (res.ok) {
+      // optional: update localStorage user with upiId/screenshot
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          ...user,
+          upiId: upiId || user.upiId,
+          paymentScreenshot: data.paymentScreenshot || user.paymentScreenshot,
+        })
+      );
+
       alert(
         "Thank you for joining! Please wait while we confirm your payment and create your ticket."
       );
-      router.push("/");
+
+      // redirect to confirmation with userId
+      router.push(`/confirmation?userId=${encodeURIComponent(userId)}`);
     } else {
-      alert(data.error);
+      alert(data.error || "Payment submission failed");
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-700 flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-white dark:bg-gray-900 shadow-2xl rounded-xl p-10 space-y-6 text-center">
-        {/* Header */}
-        <h2 className="text-3xl font-extrabold text-gray-800 dark:text-white">
+      <div className="w-full max-w-lg bg-white dark:bg-gray-900 shadow-2xl rounded-xl p-10">
+        <h2 className="text-3xl font-extrabold text-center text-gray-800 dark:text-white mb-4">
           Payment Page
         </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Please pay <strong>₹199</strong> using the QR code below and upload your details.
+        <p className="text-center text-gray-600 dark:text-gray-400 mb-6">
+          Please pay ₹199 using the QR code below and upload your details.
         </p>
 
-        {/* QR Image */}
-        <div className="space-y-4">
-          <h3 className="font-semibold text-gray-700 dark:text-gray-300 mb-2">
-            {troubleshootMode ? "Troubleshoot QR" : "UPI QR"}
-          </h3>
-          {(troubleshootMode ? troubleshootImage : qrImage) && (
-            <img
-              src={troubleshootMode ? troubleshootImage : qrImage}
-              alt="UPI QR"
-              className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md object-contain border-4 border-blue-500 rounded-xl shadow-lg transition-transform transform hover:scale-105"
-            />
-          )}
-        </div>
+        {/* QR */}
+        <h3 className="text-center font-semibold mb-3">
+          {troubleshootMode ? "Troubleshoot QR" : "UPI QR"}
+        </h3>
+        {(troubleshootMode ? troubleshootImage : qrImage) && (
+          <img
+            src={troubleshootMode ? troubleshootImage : qrImage}
+            alt="UPI QR"
+            className="mx-auto w-full max-w-xs sm:max-w-sm md:max-w-md object-contain border-4 border-blue-500 rounded-xl shadow-lg transition-transform transform hover:scale-105 mb-4"
+          />
+        )}
 
-        {/* Troubleshoot Button */}
-        <div className="mt-4">
-          <button
-            onClick={handleTroubleshootClick}
-            className="w-full bg-red-600 text-white font-semibold p-3 rounded-lg shadow hover:bg-red-700 transition-transform transform hover:scale-105"
-          >
-            Show Troubleshoot QR
-          </button>
-        </div>
+        <button
+          type="button"
+          onClick={handleTroubleshootClick}
+          className="w-full bg-red-600 text-white font-semibold p-3 rounded-lg shadow hover:bg-red-700 transition-transform transform hover:scale-105 mb-6"
+        >
+          Show Troubleshoot QR
+        </button>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="space-y-5 mt-6 text-left">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
             placeholder="Enter your UPI ID (optional)"

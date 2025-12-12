@@ -1,17 +1,20 @@
+// app/api/payment-confirm/route.js
 import { NextResponse } from "next/server";
 import { dbConnect } from "../../../dbConfig/dbConfig.js";
 import User from "../../../models/users.models.js";
 import { uploadScreenshot } from "../../../lib/cloudinary.js";
+
 export async function POST(req) {
   try {
     await dbConnect();
     const formData = await req.formData();
-
-    const rollNumber = formData.get("rollNumber");
+    console.log(formData);
+    
+    const kiitEmail = formData.get("email");
     const upiId = formData.get("upiId");
     const screenshotFile = formData.get("screenshot");
 
-    const user = await User.findOne({ rollNumber });
+    const user = await User.findOne({ kiitEmail:kiitEmail });
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }

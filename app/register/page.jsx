@@ -1,5 +1,6 @@
 "use client";
 
+import axios from "axios";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -13,42 +14,41 @@ export default function RegistrationPage() {
     year: "",
     phoneNumber: "",
     whatsappNumber: "",
+    hostel: "",
     email: "",
   });
+  const [sameAsPhone, setSameAsPhone] = useState(false);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleCheckboxChange = (e) => {
+    const checked = e.target.checked;
+    setSameAsPhone(checked);
+    if (checked) {
+      setFormData((prev) => ({ ...prev, whatsappNumber: prev.phoneNumber }));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Merge firstName + lastName into fullName (last name first)
     const fullName = `${formData.lastName} ${formData.firstName}`;
-
     const payload = {
       ...formData,
-      fullName, // send fullName instead of separate fields
+      fullName,
       kiitEmail: `${formData.rollNumber}@kiit.ac.in`,
     };
 
     try {
-      const res = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const response = await axios.post("/api/register", payload);
+      const data = response.data;
 
-      let data = null;
-      try {
-        data = await res.json();
-      } catch {}
-
-      if (res.ok) {
-        const roll = data?.rollNumber || formData.rollNumber;
-        router.push(`/verify-otp?roll=${encodeURIComponent(roll)}`);
+      if (response.status === 200) {
+        router.push("/"); // go to home page after successful register
       } else {
-        alert((data && data.error) || `Request failed with status ${res.status}`);
+        alert((data && data.error) || `Request failed with status ${response.status}`);
       }
     } catch (err) {
       console.error(err);
@@ -102,17 +102,6 @@ export default function RegistrationPage() {
             className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
 
-          {/* Email */}
-          <input
-            type="email"
-            name="email"
-            placeholder="KIIT Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
-
           {/* Branch & Year */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <select
@@ -147,13 +136,28 @@ export default function RegistrationPage() {
             </select>
           </div>
 
+          {/* Hostel */}
+          <input
+            type="text"
+            name="hostel"
+            placeholder="Hostel Name/Number"
+            value={formData.hostel}
+            onChange={handleChange}
+            className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+
           {/* Phone Number */}
           <input
             type="text"
             name="phoneNumber"
             placeholder="Phone Number"
             value={formData.phoneNumber}
-            onChange={handleChange}
+            onChange={(e) => {
+              handleChange(e);
+              if (sameAsPhone) {
+                setFormData((prev) => ({ ...prev, whatsappNumber: e.target.value }));
+              }
+            }}
             required
             className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
@@ -165,8 +169,23 @@ export default function RegistrationPage() {
             placeholder="WhatsApp Number"
             value={formData.whatsappNumber}
             onChange={handleChange}
+            disabled={sameAsPhone}
             className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
+
+          {/* Checkbox */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="checkbox"
+              id="sameAsPhone"
+              checked={sameAsPhone}
+              onChange={handleCheckboxChange}
+              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+            />
+            <label htmlFor="sameAsPhone" className="text-gray-700 dark:text-gray-300">
+              WhatsApp number same as Phone number
+            </label>
+          </div>
 
           {/* Submit Button */}
           <button

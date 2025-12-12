@@ -1,10 +1,11 @@
 import mongoose from "mongoose";
+import { type } from "os";
 
 const userSchema = new mongoose.Schema(
   {
     fullName: {
       type: String,
-      required: true,
+      // required: true,
       trim: true,
     },
     kiitEmail: {
@@ -14,7 +15,7 @@ const userSchema = new mongoose.Schema(
     },
     phoneNumber: {
       type: String,
-      required: true,
+      // required: true,
       match: [/^[0-9]{10}$/, "Please enter a valid phone number"],
     },
     whatsappNumber: {
@@ -23,12 +24,12 @@ const userSchema = new mongoose.Schema(
     },
     rollNumber: {
       type: String,
-      required: true,
+      // required: true,
       unique: true,
     },
     branch: {
       type: String,
-      required: true,
+      // required: true,
       enum: [
         "Computer Science",
         "Electronics",
@@ -41,7 +42,7 @@ const userSchema = new mongoose.Schema(
     },
     year: {
       type: Number,
-      required: true,
+      // required: true,
       enum: [1, 2, 3, 4],
     },
     isPaymentSuccessful: {
@@ -55,6 +56,10 @@ const userSchema = new mongoose.Schema(
     upiId: {
       type: String,
       trim: true,
+    },
+    hexcode:{type:String},
+    hostel:{
+      type:String
     },
     paymentScreenshot: {
       type: String,
