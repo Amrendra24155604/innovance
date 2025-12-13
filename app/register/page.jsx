@@ -2,7 +2,7 @@
 
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function RegistrationPage() {
   const router = useRouter();
@@ -19,6 +19,30 @@ export default function RegistrationPage() {
   });
   const [sameAsPhone, setSameAsPhone] = useState(false);
 
+  // Fetch rollNumber + email from API
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        // Replace with actual logged-in email (could come from session)
+         const email = localStorage.getItem("email");
+if (!email) return;
+
+const response = await axios.get(`/api/user/by-email?email=${encodeURIComponent(email)}`);
+        if (response.status === 200) {
+          const { rollNumber, kiitEmail } = response.data;
+          setFormData((prev) => ({
+            ...prev,
+            rollNumber,
+            email: kiitEmail,
+          }));
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+    fetchUserData();
+  }, []);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -32,42 +56,43 @@ export default function RegistrationPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const fullName = `${formData.lastName} ${formData.firstName}`;
-    const payload = {
-      ...formData,
-      fullName,
-      kiitEmail: `${formData.rollNumber}@kiit.ac.in`,
-    };
-
-    try {
-      const response = await axios.post("/api/register", payload);
-      const data = response.data;
-
-      if (response.status === 200) {
-        router.push("/"); // go to home page after successful register
-      } else {
-        alert((data && data.error) || `Request failed with status ${response.status}`);
-      }
-    } catch (err) {
-      console.error(err);
-      alert("Error submitting form");
-    }
+const email = localStorage.getItem("email")
+  e.preventDefault();
+  const fullName = `${formData.lastName} ${formData.firstName}`;
+  const payload = {
+    ...formData,
+    fullName,
+    kiitEmail: email,
   };
+
+  try {
+    const response = await axios.post("/api/register", payload);
+
+    if (response.status === 200) {
+      const { user } = response.data;
+
+      // Store user data in localStorage
+      if (typeof window !== "undefined") {
+        localStorage.setItem("user", JSON.stringify(user));
+        localStorage.setItem("isRegistered", "true");
+      }
+
+      router.push("/");
+    } else {
+      alert(response.data.error || "Registration failed");
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Error submitting form");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-700 flex items-center justify-center p-6">
       <div className="w-full max-w-lg bg-white dark:bg-gray-900 shadow-2xl rounded-xl p-10">
-        {/* Header */}
         <h2 className="text-3xl font-extrabold text-center text-gray-800 dark:text-white mb-6">
           Student Registration
         </h2>
-        <p className="text-center text-gray-600 dark:text-gray-400 mb-8">
-          Fill in your details to join <span className="font-semibold">Innovance 4.0</span>
-        </p>
-
-        {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* First & Last Name */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -78,7 +103,7 @@ export default function RegistrationPage() {
               value={formData.firstName}
               onChange={handleChange}
               required
-              className="border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 w-full"
+              className="border p-3 rounded-lg w-full"
             />
             <input
               type="text"
@@ -87,20 +112,29 @@ export default function RegistrationPage() {
               value={formData.lastName}
               onChange={handleChange}
               required
-              className="border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 w-full"
+              className="border p-3 rounded-lg w-full"
             />
           </div>
 
-          {/* Roll Number */}
+          {/* Roll Number (disabled) */}
           <input
+  type="text"
+  name="rollNumber"
+  placeholder="Roll Number"
+  value={formData.rollNumber || "Loading..."} // fallback if empty
+  readOnly
+  className="w-full border p-3 rounded-lg bg-gray-200 text-gray-700"
+/>
+
+          {/* Email (disabled) */}
+          {/* <input
             type="text"
-            name="rollNumber"
-            placeholder="Roll Number"
-            value={formData.rollNumber}
-            onChange={handleChange}
-            required
-            className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
-          />
+            name="email"
+            placeholder="KIIT Email"
+            value={formData.email}
+            disabled
+            className="w-full border p-3 rounded-lg bg-gray-200"
+          /> */}
 
           {/* Branch & Year */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -109,7 +143,7 @@ export default function RegistrationPage() {
               value={formData.branch}
               onChange={handleChange}
               required
-              className="border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 w-full"
+              className="border p-3 rounded-lg w-full"
             >
               <option value="">Select Branch</option>
               <option value="Computer Science">Computer Science</option>
@@ -126,7 +160,7 @@ export default function RegistrationPage() {
               value={formData.year}
               onChange={handleChange}
               required
-              className="border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500 w-full"
+              className="border p-3 rounded-lg w-full"
             >
               <option value="">Select Year</option>
               <option value="1">1st Year</option>
@@ -140,10 +174,10 @@ export default function RegistrationPage() {
           <input
             type="text"
             name="hostel"
-            placeholder="Hostel Name/Number"
+            placeholder="Hostel Name"
             value={formData.hostel}
             onChange={handleChange}
-            className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full border p-3 rounded-lg"
           />
 
           {/* Phone Number */}
@@ -159,7 +193,7 @@ export default function RegistrationPage() {
               }
             }}
             required
-            className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full border p-3 rounded-lg"
           />
 
           {/* WhatsApp Number */}
@@ -170,7 +204,7 @@ export default function RegistrationPage() {
             value={formData.whatsappNumber}
             onChange={handleChange}
             disabled={sameAsPhone}
-            className="w-full border border-gray-300 dark:border-gray-700 p-3 rounded-lg focus:ring-2 focus:ring-blue-500"
+            className="w-full border p-3 rounded-lg"
           />
 
           {/* Checkbox */}
@@ -180,31 +214,19 @@ export default function RegistrationPage() {
               id="sameAsPhone"
               checked={sameAsPhone}
               onChange={handleCheckboxChange}
-              className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+              className="h-4 w-4"
             />
-            <label htmlFor="sameAsPhone" className="text-gray-700 dark:text-gray-300">
-              WhatsApp number same as Phone number
-            </label>
+            <label htmlFor="sameAsPhone">WhatsApp number same as Phone number</label>
           </div>
 
-          {/* Submit Button */}
+          {/* Submit */}
           <button
             type="submit"
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold p-3 rounded-lg shadow hover:from-blue-700 hover:to-purple-700 transition-transform transform hover:scale-105"
+            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold p-3 rounded-lg"
           >
             Register
           </button>
         </form>
-
-        <p className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-          Already registered?{" "}
-          <button
-            onClick={() => router.push("/login")}
-            className="text-blue-600 hover:underline"
-          >
-            Login instead
-          </button>
-        </p>
       </div>
     </div>
   );

@@ -10,20 +10,18 @@ export async function POST(req) {
 
     const {
       fullName,
-      rollNumber,
       branch,
       year,
       phoneNumber,
       whatsappNumber,
-      email,
-      kiitEmail, // if you send it
+      kiitEmail,
     } = body;
 
-    // basic validation
-    if (!fullName || !rollNumber || !branch || !year || !phoneNumber) {
+    // basic validation (no rollNumber here)
+    if (!fullName || !branch || !year || !phoneNumber) {
       return NextResponse.json(
         { error: "Missing required fields" },
-        { status:400 }
+        { status: 400 }
       );
     }
 
@@ -35,15 +33,15 @@ export async function POST(req) {
       );
     }
 
-    // find existing user created at OTP step
     let user = await User.findOne({ kiitEmail: finalEmail });
 
     if (!user) {
-      // if not present, create new
+      // create new user with rollNumber extracted from email
+      const rollNumber = finalEmail.split("@")[0];
       user = new User({
         kiitEmail: finalEmail,
-        fullName,
         rollNumber,
+        fullName,
         branch,
         year: Number(year),
         phoneNumber,
@@ -51,8 +49,8 @@ export async function POST(req) {
         isRegistered: true,
       });
     } else {
+      // update other fields but do not overwrite rollNumber
       user.fullName = fullName;
-      user.rollNumber = rollNumber;
       user.branch = branch;
       user.year = Number(year);
       user.phoneNumber = phoneNumber;

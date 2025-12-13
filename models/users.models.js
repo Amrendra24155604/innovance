@@ -25,7 +25,7 @@ const userSchema = new mongoose.Schema(
     rollNumber: {
       type: String,
       // required: true,
-      unique: true,
+      // unique: true,
     },
     branch: {
       type: String,
@@ -62,6 +62,7 @@ const userSchema = new mongoose.Schema(
       type:String
     },
     paymentScreenshot: {
+      default:null,
       type: String,
     },
     otp: { type: String },

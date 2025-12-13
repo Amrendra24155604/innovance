@@ -37,9 +37,9 @@ export default function VerifyOtpPage() {
 
       if (res.ok) {
         if (typeof window !== "undefined") {
-          localStorage.setItem("email", data.kiitEmail);
-          localStorage.setItem("isRegistered", String(data.isRegistered));
-          localStorage.setItem("user", JSON.stringify(data.user || {}));
+         localStorage.setItem("email", data.user.kiitEmail);
+localStorage.setItem("isRegistered", String(data.user.isRegistered));
+localStorage.setItem("user", JSON.stringify(data.user || {}));
         }
 
         if (data.isRegistered) {

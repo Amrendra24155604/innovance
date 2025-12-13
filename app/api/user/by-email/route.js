@@ -18,15 +18,15 @@ export async function GET(req) {
       return Response.json({ error: "User not found" }, { status: 404 });
     }
 
-    // ✅ compute flags
     const isRegistered = true; // user exists
     const isPaymentSuccessful = Boolean(user.isPaymentSuccessful);
     const hasPaymentDetails = Boolean(user.upiId || user.screenshotUrl);
-
+    const rollNumber = user.rollNumber
     return Response.json({
       isRegistered,
       isPaymentSuccessful,
       hasPaymentDetails,
+      rollNumber,
       upiId: user.upiId || null,
       paymentScreenshot: user.paymentScreenshot || null,
     });

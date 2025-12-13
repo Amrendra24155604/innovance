@@ -7,11 +7,20 @@ export async function POST(req) {
     await dbConnect();
     const { email } = await req.json();
 
+    // Extract roll number from email (before @)
+    const rollNumber = email.split("@")[0];
+
     // Find user by KIIT email
-    const user = await User.findOne({ kiitEmail: email });
+    let user = await User.findOne({ kiitEmail: email });
+
+    // If user exists but rollNumber not stored, update it
+    if (user && !user.rollNumber) {
+      user.rollNumber = rollNumber;
+      await user.save();
+    }
 
     // If no user or no sessionId, reject
-    if (!user || !user.sessionId) {
+    if (!user) {
       return NextResponse.json(
         { error: "No active session found. Please register or verify your email." },
         { status: 401 }
@@ -19,19 +28,19 @@ export async function POST(req) {
     }
 
     // If sessionId exists → login success
-    return NextResponse.json(
-      {
-        message: "Login successful",
-        user: {
-          fullName: user.fullName,
-          rollNumber: user.rollNumber,
-          branch: user.branch,
-          year: user.year,
-          kiitEmail: user.kiitEmail,
-        },
-      },
-      { status: 200 }
-    );
+   return NextResponse.json(
+  {
+    message: "Login successful",
+    user: {
+      fullName: user.fullName,
+      rollNumber: user.rollNumber,
+      branch: user.branch,
+      year: user.year,
+      kiitEmail: user.kiitEmail,
+    },
+  },
+  { status: 200 }
+);
   } catch (error) {
     console.error("Error in /api/login:", error);
     return NextResponse.json(

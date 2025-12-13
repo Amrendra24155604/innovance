@@ -21,16 +21,16 @@ export default function LandingPage() {
 
     const user = JSON.parse(storedUser);
 
-    // ✅ Fetch user details from backend API
     async function fetchUserDetails() {
       try {
         const res = await fetch(`/api/user/by-email?email=${encodeURIComponent(user.kiitEmail)}`);
         const data = await res.json();
+console.log("User details:", data);
 
         if (res.ok) {
           setIsRegistered(data.isRegistered ?? true); // user exists
           setUpiId(data.upiId || "");
-          setPaymentScreenshot(data.screenshotUrl || null);
+          setPaymentScreenshot(data.paymentScreenshot || null);
           setIsPaymentSuccessful(data.isPaymentSuccessful || false);
         } else {
           console.error("Error fetching user:", data.error);
@@ -43,10 +43,8 @@ export default function LandingPage() {
     fetchUserDetails();
   }, [router]);
 
-  // ✅ Logic for button rendering
-  const canGoToConfirmation =
-    isRegistered && isPaymentSuccessful; // only when admin approves
-
+const canGoToConfirmation =
+  isRegistered && (isPaymentSuccessful || paymentScreenshot !== null);
   const hasPaymentDetails =
     isRegistered && (upiId !== "" || paymentScreenshot !== null);
 
