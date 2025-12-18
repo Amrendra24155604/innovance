@@ -38,6 +38,8 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      console.log(email);
+      
       const res = await fetch("/api/send-otp", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
