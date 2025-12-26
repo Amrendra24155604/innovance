@@ -23,11 +23,12 @@ export default function RegistrationPage() {
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        // Replace with actual logged-in email (could come from session)
-         const email = localStorage.getItem("email");
-if (!email) return;
+        const email = localStorage.getItem("email");
+        if (!email) return;
 
-const response = await axios.get(`/api/user/by-email?email=${encodeURIComponent(email)}`);
+        const response = await axios.get(
+          `/api/user/by-email?email=${encodeURIComponent(email)}`
+        );
         if (response.status === 200) {
           const { rollNumber, kiitEmail } = response.data;
           setFormData((prev) => ({
@@ -56,36 +57,62 @@ const response = await axios.get(`/api/user/by-email?email=${encodeURIComponent(
   };
 
   const handleSubmit = async (e) => {
-const email = localStorage.getItem("email")
-  e.preventDefault();
-  const fullName = `${formData.lastName} ${formData.firstName}`;
-  const payload = {
-    ...formData,
-    fullName,
-    kiitEmail: email,
-  };
+    e.preventDefault();
+    const email = localStorage.getItem("email");
+    const fullName = `${formData.lastName} ${formData.firstName}`;
 
-  try {
-    const response = await axios.post("/api/register", payload);
+    const payload = {
+      ...formData,
+      fullName,
+      kiitEmail: email, // backend uses this
+    };
 
-    if (response.status === 200) {
-      const { user } = response.data;
+    try {
+      // 1) Register user
+      const response = await axios.post("/api/register", payload);
 
-      // Store user data in localStorage
-      if (typeof window !== "undefined") {
-        localStorage.setItem("user", JSON.stringify(user));
-        localStorage.setItem("isRegistered", "true");
+      if (response.status === 200) {
+        const { user } = response.data;
+
+        // 2) Generate hexcode only AFTER isRegistered is true
+        //    You can trust backend /api/register to set isRegistered: true
+        try {
+          const hexRes = await axios.post("/api/hexcodeGen", {
+            participantId: user.rollNumber, // or user.kiitEmail depending on backend
+          });
+
+          if (hexRes.status === 200) {
+            const { hexcode } = hexRes.data;
+
+            if (typeof window !== "undefined") {
+              // store hexcode with user for later (QR, ID card, etc.)
+              localStorage.setItem(
+                "user",
+                JSON.stringify({ ...user, hexcode })
+              );
+              localStorage.setItem("isRegistered", "true");
+              localStorage.setItem("hexcode", hexcode);
+              console.log(hexcode);
+              
+            }
+          } else {
+            console.error("Failed to generate hexcode:", hexRes.data);
+          }
+        } catch (hexErr) {
+          console.error("Error generating hexcode:", hexErr);
+          // optional: show toast but don't block registration success
+        }
+
+        // 3) Redirect after everything
+        router.push("/");
+      } else {
+        alert(response.data.error || "Registration failed");
       }
-
-      router.push("/");
-    } else {
-      alert(response.data.error || "Registration failed");
+    } catch (err) {
+      console.error(err);
+      alert("Error submitting form");
     }
-  } catch (err) {
-    console.error(err);
-    alert("Error submitting form");
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-gray-700 flex items-center justify-center p-6">
@@ -118,23 +145,13 @@ const email = localStorage.getItem("email")
 
           {/* Roll Number (disabled) */}
           <input
-  type="text"
-  name="rollNumber"
-  placeholder="Roll Number"
-  value={formData.rollNumber || "Loading..."} // fallback if empty
-  readOnly
-  className="w-full border p-3 rounded-lg bg-gray-200 text-gray-700"
-/>
-
-          {/* Email (disabled) */}
-          {/* <input
             type="text"
-            name="email"
-            placeholder="KIIT Email"
-            value={formData.email}
-            disabled
-            className="w-full border p-3 rounded-lg bg-gray-200"
-          /> */}
+            name="rollNumber"
+            placeholder="Roll Number"
+            value={formData.rollNumber || "Loading..."}
+            readOnly
+            className="w-full border p-3 rounded-lg bg-gray-200 text-gray-700"
+          />
 
           {/* Branch & Year */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -189,7 +206,10 @@ const email = localStorage.getItem("email")
             onChange={(e) => {
               handleChange(e);
               if (sameAsPhone) {
-                setFormData((prev) => ({ ...prev, whatsappNumber: e.target.value }));
+                setFormData((prev) => ({
+                  ...prev,
+                  whatsappNumber: e.target.value,
+                }));
               }
             }}
             required
@@ -216,7 +236,9 @@ const email = localStorage.getItem("email")
               onChange={handleCheckboxChange}
               className="h-4 w-4"
             />
-            <label htmlFor="sameAsPhone">WhatsApp number same as Phone number</label>
+            <label htmlFor="sameAsPhone">
+              WhatsApp number same as Phone number
+            </label>
           </div>
 
           {/* Submit */}

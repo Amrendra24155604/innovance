@@ -65,12 +65,19 @@ const userSchema = new mongoose.Schema(
       default:null,
       type: String,
     },
+    idCard:{
+      default:false,
+      type:Boolean
+    },
+    foodpacket:{
+      default:false,
+      type:Boolean
+    },   
     otp: { type: String },
     otpExpiry: { type: Date },
     approvedBy: { type: String },
     approvedAt: { type: Date },
-    sessionId: { type: String, unique: true },
-    sessionExpiry: { type: Date },
+
   },
   { timestamps: true }
 );
